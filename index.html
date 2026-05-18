@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NextShop — AI-Powered Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  /* ===== TOKENS ===== */
+  :root {
+    --bg: #080c10;
+    --surface: #0f1419;
+    --surface2: #161d26;
+    --border: #1e2a38;
+    --accent: #00d4ff;
+    --accent2: #7b61ff;
+    --gold: #f5a623;
+    --green: #00e096;
+    --red: #ff4d6d;
+    --text: #e8edf2;
+    --muted: #6b7f94;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --r: 12px;
+  }
+
+  /* ===== RESET ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ===== NOISE OVERLAY ===== */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+
+  /* ===== LAYOUT ===== */
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* ===== NAV ===== */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(8,12,16,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-decoration: none;
+  }
+  .nav-actions { display: flex; gap: 12px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 18px; border-radius: 8px;
+    font-family: var(--font-body); font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; border: none; text-decoration: none;
+  }
+  .btn-ghost {
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface); color: var(--text); border-color: var(--accent); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000; font-weight: 600;
+  }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .badge {
+    background: var(--red); color: white; border-radius: 50%;
+    font-size: 11px; font-weight: 700; width: 18px; height: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-left: -4px; margin-top: -8px;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    padding: 72px 0 56px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+    color: var(--accent); border-radius: 100px; padding: 4px 14px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero-eyebrow::before { content: '●'; font-size: 8px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .hero h1 {
+    font-family: var(--font-display); font-size: clamp(36px, 4vw, 56px);
+    font-weight: 800; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 20px;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p { color: var(--muted); font-size: 17px; line-height: 1.7; margin-bottom: 32px; }
+  .hero-stats {
+    display: flex; gap: 32px;
+    padding-top: 24px; border-top: 1px solid var(--border);
+  }
+  .stat-num {
+    font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--text);
+  }
+  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .hero-visual {
+    position: relative; height: 320px;
+    background: var(--surface);
+    border-radius: 20px; border: 1px solid var(--border);
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+  }
+  .hero-visual-glow {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 50%, rgba(0,212,255,0.08) 0%, transparent 70%);
+  }
+  .agent-flow {
+    display: flex; flex-direction: column; gap: 12px; width: 80%; z-index: 1;
+  }
+  .agent-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px;
+  }
+  .agent-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .agent-icon.a1 { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); }
+  .agent-icon.a2 { background: rgba(123,97,255,0.1); border: 1px solid rgba(123,97,255,0.2); }
+  .agent-label { font-weight: 600; color: var(--text); }
+  .agent-sub { color: var(--muted); font-size: 11px; }
+  .agent-arrow { text-align: center; color: var(--muted); font-size: 20px; }
+
+  /* ===== SECTION TITLE ===== */
+  .section-header { margin-bottom: 28px; display: flex; align-items: baseline; justify-content: space-between; }
+  .section-title {
+    font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
+  }
+  .section-count { color: var(--muted); font-size: 13px; }
+
+  /* ===== CATEGORY PILLS ===== */
+  .cat-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+  .cat-pill {
+    padding: 7px 16px; border-radius: 100px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); font-size: 13px; font-family: var(--font-body); font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+    text-transform: capitalize;
+  }
+  .cat-pill:hover { border-color: var(--accent); color: var(--accent); }
+  .cat-pill.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+
+  /* ===== PRODUCT GRID ===== */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+  .product-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+    transition: all 0.25s;
+    cursor: pointer;
+    position: relative;
+  }
+  .product-card:hover {
+    border-color: rgba(0,212,255,0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  }
+  .product-img-wrap {
+    background: #fff;
+    height: 200px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; position: relative;
+  }
+  .product-img-wrap img { max-height: 160px; max-width: 100%; object-fit: contain; }
+  .product-category-tag {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(8,12,16,0.7); color: var(--muted);
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .product-body { padding: 16px; }
+  .product-title {
+    font-size: 14px; font-weight: 500; line-height: 1.4;
+    margin-bottom: 10px; color: var(--text);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .product-meta { display: flex; align-items: center; justify-content: space-between; }
+  .product-price {
+    font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--accent);
+  }
+  .product-rating { display: flex; align-items: center; gap: 4px; color: var(--gold); font-size: 12px; }
+  .product-actions {
+    padding: 0 16px 14px;
+    display: flex; gap: 8px;
+  }
+  .btn-view { flex: 1; padding: 7px; font-size: 12px; }
+  .btn-cart { flex: 1; padding: 7px; font-size: 12px; }
+
+  /* ===== HISTORY PANEL ===== */
+  .two-col { display: grid; grid-template-columns: 1fr 360px; gap: 24px; margin-top: 48px; }
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); overflow: hidden;
+  }
+  .panel-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+  .panel-body { padding: 20px; }
+
+  .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; }
+  .history-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    font-size: 13px; animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  .history-icon {
+    width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+  .history-icon.search { background: rgba(0,212,255,0.1); }
+  .history-icon.view { background: rgba(123,97,255,0.1); }
+  .history-icon.add_to_cart { background: rgba(0,224,150,0.1); }
+  .history-icon.purchase { background: rgba(245,166,35,0.1); }
+  .history-text { flex: 1; }
+  .history-action { font-weight: 600; color: var(--text); text-transform: capitalize; }
+  .history-detail { color: var(--muted); font-size: 11px; margin-top: 1px; }
+  .history-price { color: var(--accent); font-weight: 600; font-size: 12px; }
+  .history-time { color: var(--muted); font-size: 10px; }
+  .empty-state { text-align: center; color: var(--muted); padding: 32px 0; font-size: 13px; }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* ===== AI RECOMMENDATION PANEL ===== */
+  .ai-btn-wrap { padding: 16px 20px; border-top: 1px solid var(--border); }
+  .recommend-loading {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 32px 0; color: var(--muted); font-size: 13px;
+  }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .steps-list { display: flex; flex-direction: column; gap: 4px; text-align: center; }
+  .step-item { font-size: 12px; }
+  .step-item.done { color: var(--green); }
+  .step-item.active { color: var(--accent); }
+  .step-item.pending { color: var(--border); }
+
+  .profile-summary {
+    background: rgba(0,212,255,0.05);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 8px; padding: 12px 14px;
+    font-size: 13px; color: var(--muted); line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .profile-label { color: var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 6px; }
+
+  .rec-list { display: flex; flex-direction: column; gap: 12px; }
+  .rec-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+    display: grid; grid-template-columns: 80px 1fr;
+    animation: fadeIn 0.4s ease;
+    transition: border-color 0.2s;
+  }
+  .rec-card:hover { border-color: rgba(0,212,255,0.3); }
+  .rec-img { background: #fff; display: flex; align-items: center; justify-content: center; padding: 8px; }
+  .rec-img img { max-width: 60px; max-height: 60px; object-fit: contain; }
+  .rec-info { padding: 10px 12px; }
+  .rec-title { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.4; margin-bottom: 4px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .rec-price { color: var(--accent); font-weight: 700; font-size: 14px; }
+  .rec-reason {
+    font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .rec-number {
+    position: absolute; top: 6px; right: 6px;
+    width: 20px; height: 20px; background: var(--accent2); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white;
+  }
+
+  /* ===== TOAST ===== */
+  .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 12px 18px; border-radius: 10px;
+    font-size: 13px; display: flex; align-items: center; gap: 10px;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    max-width: 320px;
+  }
+  @keyframes slideUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .toast.green { border-color: rgba(0,224,150,0.3); }
+  .toast.blue { border-color: rgba(0,212,255,0.3); }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    z-index: 200; display: none; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; max-width: 580px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+    animation: fadeIn 0.25s ease;
+  }
+  .modal-head {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+  .modal-body { padding: 24px; }
+  .modal-img { background: #fff; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 20px; }
+  .modal-img img { max-height: 200px; object-fit: contain; }
+  .modal-price { font-family: var(--font-display); font-size: 32px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+  .modal-desc { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 12px; }
+
+  /* ===== FOOTER ===== */
+  footer {
+    margin-top: 80px; padding: 32px 0;
+    border-top: 1px solid var(--border);
+    text-align: center; color: var(--muted); font-size: 13px;
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-visual { display: none; }
+    .two-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="wrap nav-inner">
+    <a class="logo" href="#">NextShop</a>
+    <div class="nav-actions">
+      <span id="apiStatusBadge" style="font-size:12px; color:var(--muted);">Connecting...</span>
+      <button class="btn btn-ghost" onclick="openCartModal()">
+        🛒 Cart <span class="badge" id="cartCount">0</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="wrap">
+  <div class="hero">
+    <div>
+      <div class="hero-eyebrow">⚡ Multi-Agent AI Powered</div>
+      <h1>Shop Smarter with <em>AI</em> That Knows You</h1>
+      <p>Our dual-agent system tracks your behavior, profiles your taste, and surfaces the exact products you didn't know you needed — in real time.</p>
+      <button class="btn btn-primary" onclick="scrollToProducts()">Explore Products →</button>
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num" id="productCount">—</div>
+          <div class="stat-label">Products</div>
+        </div>
+        <div>
+          <div class="stat-num" id="categoryCount">—</div>
+          <div class="stat-label">Categories</div>
+        </div>
+        <div>
+          <div class="stat-num">2</div>
+          <div class="stat-label">AI Agents</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-visual-glow"></div>
+      <div class="agent-flow">
+        <div class="agent-box">
+          <div class="agent-icon a1">🔍</div>
+          <div>
+            <div class="agent-label">Agent 1 — Profiler</div>
+            <div class="agent-sub">Analyzes browsing history → builds user profile</div>
+          </div>
+        </div>
+        <div class="agent-arrow">↓</div>
+        <div class="agent-box">
+          <div class="agent-icon a2">🎯</div>
+          <div>
+            <div class="agent-label">Agent 2 — Scout</div>
+            <div class="agent-sub">Searches store API → returns top 5 matches</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CUMULATIVE AI RECOMMENDATIONS SECTION (Hidden by default) -->
+<section class="wrap" id="ai-recommended-section" style="display: none; margin-bottom: 48px;">
+  <div class="section-header">
+    <div class="section-title" style="color: var(--accent);">✨ Recommended For You</div>
+    <div class="section-count" id="ai-recommended-count">0 items</div>
+  </div>
+  <div class="products-grid" id="ai-recommended-grid">
+    <!-- AI products will be appended here -->
+  </div>
+</section>
+
+<!-- PRODUCTS SECTION -->
+<section class="wrap" id="products-section">
+  <div class="section-header">
+    <div class="section-title">All Products</div>
+    <div class="section-count" id="filterCount"></div>
+  </div>
+  <div class="cat-bar" id="categoryBar">
+    <button class="cat-pill active" data-cat="all" onclick="filterCategory('all', this)">All</button>
+  </div>
+  <div class="products-grid" id="productsGrid">
+    <!-- Products injected here -->
+  </div>
+</section>
+
+<!-- HISTORY + RECOMMENDATIONS -->
+<section class="wrap">
+  <div class="two-col">
+    <!-- History Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">📋 Your Activity Log</div>
+        <button class="btn btn-ghost" style="font-size:12px;padding:5px 12px;" onclick="clearHistory()">Clear</button>
+      </div>
+      <div class="panel-body">
+        <div class="history-list" id="historyList">
+          <div class="empty-state"><div class="empty-icon">🛍️</div>No activity yet.<br>Browse or search products to build your history.</div>
+        </div>
+      </div>
+      <div class="ai-btn-wrap">
+        <button class="btn btn-primary" style="width:100%;" id="recommendBtn" onclick="getRecommendations()" disabled>
+          ✨ Get AI Recommendations
+        </button>
+        <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px;">
+          Browse some products first to enable recommendations
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">🤖 AI Picks For You</div>
+        <div style="font-size:11px;color:var(--muted);">Powered by Llama 3.3</div>
+      </div>
+      <div class="panel-body" id="recommendPanel">
+        <div class="empty-state">
+          <div class="empty-icon">🧠</div>
+          Click "Get AI Recommendations" to let our dual-agent system analyze your history and suggest perfect products.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>NextShop — Multi-Agent Recommendation Demo &nbsp;·&nbsp; Powered by LangChain + Groq + Fake Store API</p>
+  </div>
+</footer>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div id="modalCategory" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;"></div>
+        <div id="modalTitle" style="font-family:var(--font-display);font-size:20px;font-weight:700;"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-img"><img id="modalImg" src="" alt=""></div>
+      <div class="modal-price" id="modalPrice"></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;" id="modalRating"></div>
+      <div class="modal-desc" id="modalDesc"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" style="flex:1;" id="modalCartBtn">Add to Cart 🛒</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CART MODAL -->
+<div class="modal-overlay" id="cartModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div style="font-family:var(--font-display);font-size:20px;font-weight:700;">Your Cart 🛒</div>
+      <button class="modal-close" onclick="closeCartModal()">✕</button>
+    </div>
+    <div class="modal-body" id="cartBody"></div>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// CONFIG — point this at your backend
+// ==========================================
+const API_BASE = "Ngrok URL HERE"; // e.g. "https://abcd-1234-5678.ngrok-free.app"
+const USER_ID = "user_" + Math.random().toString(36).slice(2, 8);
+
+// ==========================================
+// STATE
+// ==========================================
+let allProducts = [];
+let filteredProducts = [];
+let userHistory = JSON.parse(localStorage.getItem("nexshop_history") || "[]");
+let cart = JSON.parse(localStorage.getItem("nexshop_cart") || "[]");
+let currentProduct = null;
+let cumulativeRecIds = new Set(); // To prevent duplicates
+let cumulativeRecProducts = [];   // To save the products themselves
+// ==========================================
+// INIT
+// ==========================================
+document.addEventListener("DOMContentLoaded", async () => {
+  checkApiStatus();
+  await loadProducts();
+  renderHistory();
+  updateCartBadge();
+});
+
+async function checkApiStatus() {
+  const badge = document.getElementById("apiStatusBadge");
+  try {
+    const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
+      badge.textContent = "● API Live";
+      badge.style.color = "var(--green)";
+    } else throw new Error();
+  } catch {
+    badge.textContent = "● API Offline";
+    badge.style.color = "var(--red)";
+    badge.title = `Backend not reachable at ${API_BASE}`;
+  }
+}
+
+// ==========================================
+// FULL PRODUCT FALLBACK (all 20 Fake Store products)
+// ==========================================
+const FALLBACK_PRODUCTS = [
+  {id:1,title:"Fjallraven - Foldsack No. 1 Backpack, Fits 15 Laptops",price:109.95,category:"men's clothing",description:"Your perfect pack for everyday use and walks in the forest. Stash your laptop (up to 15 inches) in the padded sleeve, your everyday",image:"https://fakestoreapi.com/img/81fAZal24fL._AC_UY879_.jpg",rating:{rate:3.9,count:120}},
+  {id:2,title:"Mens Casual Premium Slim Fit T-Shirts",price:22.3,category:"men's clothing",description:"Slim-fitting style, contrast raglan long sleeve, three-button henley placket, light weight & soft fabric for breathable and comfortable wearing.",image:"https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg",rating:{rate:4.1,count:259}},
+  {id:3,title:"Mens Cotton Jacket",price:55.99,category:"men's clothing",description:"great outerwear jackets for Spring/Autumn/Winter, suitable for many occasions, such as working, hiking, camping, mountain/rock climbing, cycling, traveling or other outdoors.",image:"https://fakestoreapi.com/img/71li-ujtlUL._AC_UX679_.jpg",rating:{rate:4.7,count:500}},
+  {id:4,title:"Mens Casual Slim Fit",price:15.99,category:"men's clothing",description:"The color could be slightly different between on the screen and in practice. Please note that body builds vary by person, therefore, detailed size information should be reviewed below on this product description.",image:"https://fakestoreapi.com/img/71YXzeOuslL._AC_UY879_.jpg",rating:{rate:2.1,count:430}},
+  {id:5,title:"John Hardy Women's Legends Naga Gold & Silver Dragon Station Chain Bracelet",price:695,category:"jewelery",description:"From our Legends Collection, the Naga was inspired by the mythical water dragon that protects the ocean's pearl.",image:"https://fakestoreapi.com/img/71pWzhdJNwL._AC_UL640_FMwebp_QL65_.jpg",rating:{rate:4.6,count:400}},
+  {id:6,title:"Solid Gold Petite Micropave",price:168,category:"jewelery",description:"Satisfaction Guaranteed. Return or exchange any order within 30 days. Designed and sold by Hafeez Center in the United States.",image:"https://fakestoreapi.com/img/61sbMiUnoGL._AC_UL640_FMwebp_QL65_.jpg",rating:{rate:3.9,count:70}},
+  {id:7,title:"White Gold Plated Princess",price:9.99,category:"jewelery",description:"Classic Created Wedding Engagement Solitaire Diamond Promise Ring for Her. Gifts to spoil your love more for special occasions.",image:"https://fakestoreapi.com/img/71YAIFU48IL._AC_UL640_FMwebp_QL65_.jpg",rating:{rate:3,count:400}},
+  {id:8,title:"Pierced Owl Rose Gold Plated Stainless Steel Double",price:10.99,category:"jewelery",description:"Rose Gold Plated Double Flared Tunnel Plug Earrings. Made of 316L Stainless Steel",image:"https://fakestoreapi.com/img/51UDEzMJVpL._AC_UL640_FMwebp_QL65_.jpg",rating:{rate:1.9,count:100}},
+  {id:9,title:"WD 2TB Elements Portable External Hard Drive - USB 3.0",price:64,category:"electronics",description:"USB 3.0 and USB 2.0 Compatibility Fast data transfers Improve PC Performance High Capacity; Compatibility Formatted NTFS for Windows 10, Windows 8.1, Windows 7",image:"https://fakestoreapi.com/img/61IBBVJvSDL._AC_SY879_.jpg",rating:{rate:3.3,count:203}},
+  {id:10,title:"SanDisk SSD PLUS 1TB Internal SSD - SATA III 6 Gb/s",price:109,category:"electronics",description:"Easy upgrade for faster boot up, shutdown, and improved system responsiveness. Boosts burst write performance, making it ideal for typical PC workloads.",image:"https://fakestoreapi.com/img/61U7T1koQqL._AC_SX679_.jpg",rating:{rate:2.9,count:470}},
+  {id:11,title:"Silicon Power 256GB SSD 3D NAND A55 SLC Cache Performance Boost",price:109,category:"electronics",description:"3D NAND flash are applied to deliver high transfer speeds Remarkable transfer speeds that enable faster bootup and improved overall system performance.",image:"https://fakestoreapi.com/img/71kEqp3aZaL._AC_SX679_.jpg",rating:{rate:4.8,count:319}},
+  {id:12,title:"WD 4TB Gaming Drive Works with Playstation 4 Portable External Hard Drive",price:114,category:"electronics",description:"Expand your PS4 gaming experience, Play anywhere Fast and easy, NFC compatible",image:"https://fakestoreapi.com/img/61mtL65D4cL._AC_SX679_.jpg",rating:{rate:4.8,count:400}},
+  {id:13,title:"Acer SB220Q bi 21.5 inches Full HD (1920 x 1080) IPS Ultra-Thin",price:599,category:"electronics",description:"21. 5 inches Full HD (1920 x 1080) widescreen IPS display And Radeon free Sync technology. No compatibility issues. Targets gaming enthusiasts, professionals.",image:"https://fakestoreapi.com/img/81QpkIctqPL._AC_SX679_.jpg",rating:{rate:2.9,count:250}},
+  {id:14,title:"Samsung 49-Inch CHG90 144Hz Curved Gaming Monitor",price:999.99,category:"electronics",description:"49 INCH SUPER ULTRAWIDE 32:9 CURVED GAMING MONITOR with dual 27 inch screen side by side QUANTUM DOT (QLED) TECHNOLOGY.",image:"https://fakestoreapi.com/img/81Zt42ioCgL._AC_SX679_.jpg",rating:{rate:2.2,count:140}},
+  {id:15,title:"BIYLACLESEN Women's 3-in-1 Snowboard Jacket",price:56.99,category:"women's clothing",description:"Note: The Jackets is US standard size, Please choose size as your usual wear Material: 100% Polyester; Detachable Liner Fabric.",image:"https://fakestoreapi.com/img/51Y5NI-I5jL._AC_UX679_.jpg",rating:{rate:2.6,count:235}},
+  {id:16,title:"Lock and Love Women's Removable Hooded Faux Leather Moto Biker Jacket",price:29.95,category:"women's clothing",description:"100% POLYURETHANE(shell) 100% POLYESTER(lining) 75% POLYESTER 25% COTTON (jacket).",image:"https://fakestoreapi.com/img/81XH0e8fefL._AC_UY879_.jpg",rating:{rate:2.9,count:340}},
+  {id:17,title:"Rain Jacket Women Windbreaker Striped Climbing Raincoats",price:39.99,category:"women's clothing",description:"Lightweight perfect for trip or casual wear---Long sleeve with hooded, adjustable drawstring waist design. Button and zipper front closure raincoats.",image:"https://fakestoreapi.com/img/71HblAHs1xL._AC_UY879_-2.jpg",rating:{rate:3.8,count:679}},
+  {id:18,title:"MBJ Women's Solid Short Sleeve Boat Neck V",price:9.85,category:"women's clothing",description:"95% RAYON 5% SPANDEX, Made in USA or Imported, Do Not Bleach, Lightweight fabric with great stretch for comfort.",image:"https://fakestoreapi.com/img/71z3kpMAYsL._AC_UY879_.jpg",rating:{rate:4.7,count:130}},
+  {id:19,title:"Opna Women's Short Sleeve Moisture Tunic",price:7.95,category:"women's clothing",description:"100% Polyester, Machine wash, 100% Polyester imported, Machine Wash & Pre Shrunk for a Great Fit, Lightweight, roomy and highly breathable with moisture wicking fabric.",image:"https://fakestoreapi.com/img/51eg55uWmdL._AC_UX679_.jpg",rating:{rate:4.5,count:146}},
+  {id:20,title:"DANVOUY Womens T Shirt Casual Cotton Short",price:12.99,category:"women's clothing",description:"95% COTTON, 5% SPANDEX. Features: Casual, Short Sleeve, Letter Print, V-Neck, Fashion Tees. The fabric is soft and has some stretch.",image:"https://fakestoreapi.com/img/61pHAEJ4NML._AC_UX679_.jpg",rating:{rate:3.6,count:145}}
+];
+
+// ==========================================
+// PRODUCTS
+// ==========================================
+async function loadProducts() {
+  const grid = document.getElementById("productsGrid");
+  grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted)">
+    <div class="spinner" style="margin:0 auto 12px"></div>Loading products from Fake Store API...
+  </div>`;
+  try {
+    const res = await fetch(`${API_BASE}/products`, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error("API error");
+    allProducts = await res.json();
+  } catch {
+    // Fallback: try Fake Store API directly
+    try {
+      const res = await fetch("https://fakestoreapi.com/products", { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) throw new Error();
+      allProducts = await res.json();
+    } catch {
+      // Final fallback: use embedded product data
+      allProducts = FALLBACK_PRODUCTS;
+    }
+  }
+
+  document.getElementById("productCount").textContent = allProducts.length;
+  filteredProducts = [...allProducts];
+  buildCategoryBar();
+  renderProducts(filteredProducts);
+}
+
+function buildCategoryBar() {
+  const bar = document.getElementById("categoryBar");
+  const cats = [...new Set(allProducts.map(p => p.category))];
+  document.getElementById("categoryCount").textContent = cats.length;
+  cats.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.className = "cat-pill";
+    btn.textContent = cat;
+    btn.dataset.cat = cat;
+    btn.onclick = () => filterCategory(cat, btn);
+    bar.appendChild(btn);
+  });
+}
+
+function filterCategory(cat, btn) {
+  document.querySelectorAll(".cat-pill").forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  filteredProducts = cat === "all" ? [...allProducts] : allProducts.filter(p => p.category === cat);
+  document.getElementById("filterCount").textContent = `${filteredProducts.length} items`;
+  renderProducts(filteredProducts);
+  trackAction({ action: "search", keyword: cat === "all" ? "all products" : cat });
+}
+
+function renderProducts(products) {
+  const grid = document.getElementById("productsGrid");
+  if (!products.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted)">No products found.</div>`;
+    return;
+  }
+  grid.innerHTML = products.map(p => `
+    <div class="product-card" onclick="openProductModal(${p.id})">
+      <div class="product-img-wrap">
+        <span class="product-category-tag">${p.category}</span>
+        <img src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.style.display='none'">
+      </div>
+      <div class="product-body">
+        <div class="product-title">${p.title}</div>
+        <div class="product-meta">
+          <div class="product-price">$${p.price}</div>
+          <div class="product-rating">★ ${p.rating?.rate || '—'} <span style="color:var(--muted)">(${p.rating?.count || 0})</span></div>
+        </div>
+      </div>
+      <div class="product-actions">
+        <button class="btn btn-ghost btn-view" onclick="event.stopPropagation();openProductModal(${p.id})">View</button>
+        <button class="btn btn-primary btn-cart" onclick="event.stopPropagation();addToCart(${p.id})">Add 🛒</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ==========================================
+// MODAL
+// ==========================================
+function openProductModal(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  currentProduct = p;
+  document.getElementById("modalCategory").textContent = p.category;
+  document.getElementById("modalTitle").textContent = p.title;
+  document.getElementById("modalImg").src = p.image;
+  document.getElementById("modalPrice").textContent = `$${p.price}`;
+  document.getElementById("modalDesc").textContent = p.description;
+  document.getElementById("modalRating").innerHTML = `<span style="color:var(--gold)">★ ${p.rating?.rate}</span> <span style="color:var(--muted);font-size:13px;">(${p.rating?.count} reviews)</span>`;
+  document.getElementById("modalCartBtn").onclick = () => { addToCart(p.id); closeModal(); };
+  document.getElementById("productModal").classList.add("open");
+  trackAction({ action: "view", product_id: p.id, product_title: p.title, product_category: p.category, price: p.price });
+}
+function closeModal() { document.getElementById("productModal").classList.remove("open"); }
+
+function openCartModal() {
+  const body = document.getElementById("cartBody");
+  if (!cart.length) {
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div>Your cart is empty.</div>`;
+  } else {
+    const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    body.innerHTML = cart.map(item => `
+      <div style="display:flex;gap:12px;align-items:center;padding:12px;background:var(--surface2);border-radius:8px;margin-bottom:10px;border:1px solid var(--border)">
+        <img src="${item.image}" style="width:50px;height:50px;object-fit:contain;background:#fff;border-radius:6px;padding:4px;">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:500;">${item.title.slice(0,40)}...</div>
+          <div style="color:var(--accent);font-weight:700;">$${item.price} × ${item.qty}</div>
+        </div>
+        <button onclick="removeFromCart(${item.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;">✕</button>
+      </div>
+    `).join("") + `
+      <div style="border-top:1px solid var(--border);padding-top:16px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-family:var(--font-display);font-size:18px;font-weight:700;">Total: <span style="color:var(--accent)">$${total.toFixed(2)}</span></span>
+        <button class="btn btn-primary" onclick="checkout()">Checkout 🎉</button>
+      </div>`;
+  }
+  document.getElementById("cartModal").classList.add("open");
+}
+function closeCartModal() { document.getElementById("cartModal").classList.remove("open"); }
+
+// ==========================================
+// CART
+// ==========================================
+function addToCart(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  const existing = cart.find(x => x.id === id);
+  if (existing) { existing.qty++; }
+  else { cart.push({ ...p, qty: 1 }); }
+  localStorage.setItem("nexshop_cart", JSON.stringify(cart));
+  updateCartBadge();
+  trackAction({ action: "add_to_cart", product_id: p.id, product_title: p.title, product_category: p.category, price: p.price });
+  showToast(`✅ "${p.title.slice(0,30)}..." added to cart`, "green");
+}
+function removeFromCart(id) {
+  cart = cart.filter(x => x.id !== id);
+  localStorage.setItem("nexshop_cart", JSON.stringify(cart));
+  updateCartBadge();
+  openCartModal();
+}
+function updateCartBadge() {
+  document.getElementById("cartCount").textContent = cart.reduce((s, i) => s + i.qty, 0);
+}
+function checkout() {
+  cart.forEach(item => {
+    trackAction({ action: "purchase", product_id: item.id, product_title: item.title, product_category: item.category, price: item.price });
+  });
+  cart = [];
+  localStorage.setItem("nexshop_cart", JSON.stringify(cart));
+  updateCartBadge();
+  closeCartModal();
+  showToast("🎉 Order placed! Thanks for shopping.", "blue");
+}
+
+// ==========================================
+// HISTORY
+// ==========================================
+const ACTION_ICONS = { search: "🔍", view: "👁️", add_to_cart: "🛒", purchase: "✅" };
+
+function trackAction(action) {
+  const entry = {
+    ...action,
+    timestamp: new Date().toISOString()
+  };
+  userHistory.unshift(entry);
+  if (userHistory.length > 50) userHistory = userHistory.slice(0, 50);
+  localStorage.setItem("nexshop_history", JSON.stringify(userHistory));
+  renderHistory();
+  document.getElementById("recommendBtn").disabled = userHistory.length < 2;
+}
+
+function renderHistory() {
+  const list = document.getElementById("historyList");
+  if (!userHistory.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🛍️</div>No activity yet.<br>Browse products to build your history.</div>`;
+    return;
+  }
+  list.innerHTML = userHistory.slice(0, 20).map(h => `
+    <div class="history-item">
+      <div class="history-icon ${h.action}">${ACTION_ICONS[h.action] || "•"}</div>
+      <div class="history-text">
+        <div class="history-action">${h.action.replace(/_/g, " ")}</div>
+        <div class="history-detail">${h.product_title ? h.product_title.slice(0,40)+"..." : (h.keyword || h.product_category || "")}</div>
+        ${h.price ? `<div class="history-price">$${h.price}</div>` : ""}
+      </div>
+      <div class="history-time">${timeAgo(h.timestamp)}</div>
+    </div>
+  `).join("");
+  document.getElementById("recommendBtn").disabled = userHistory.length < 2;
+}
+
+function clearHistory() {
+  userHistory = [];
+  localStorage.removeItem("nexshop_history");
+  renderHistory();
+  document.getElementById("recommendBtn").disabled = true;
+  document.getElementById("recommendPanel").innerHTML = `<div class="empty-state"><div class="empty-icon">🧠</div>Browse products to build your history first.</div>`;
+}
+
+function timeAgo(ts) {
+  if (!ts) return "";
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return Math.floor(diff/60) + "m ago";
+  return Math.floor(diff/3600) + "h ago";
+}
+
+// ==========================================
+// AI RECOMMENDATIONS
+// ==========================================
+async function getRecommendations() {
+  const btn = document.getElementById("recommendBtn");
+  const panel = document.getElementById("recommendPanel");
+  btn.disabled = true;
+  btn.textContent = "⏳ Analyzing...";
+
+  panel.innerHTML = `
+    <div class="recommend-loading">
+      <div class="spinner"></div>
+      <div class="steps-list">
+        <div class="step-item active" id="step1">🔍 Agent 1: Profiling your taste...</div>
+        <div class="step-item pending" id="step2">🎯 Agent 2: Searching the store...</div>
+        <div class="step-item pending" id="step3">✨ Generating recommendations...</div>
+      </div>
+    </div>`;
+
+  // Animate step indicators
+  setTimeout(() => {
+    document.getElementById("step1")?.classList.replace("active","done");
+    document.getElementById("step2")?.classList.replace("pending","active");
+  }, 2000);
+  setTimeout(() => {
+    document.getElementById("step2")?.classList.replace("active","done");
+    document.getElementById("step3")?.classList.replace("pending","active");
+  }, 4000);
+
+  try {
+    const payload = {
+      user_id: USER_ID,
+      history: userHistory.slice(0, 20).map(h => ({
+        action: h.action,
+        keyword: h.keyword || null,
+        product_id: h.product_id || null,
+        product_title: h.product_title || null,
+        product_category: h.product_category || null,
+        price: h.price || null,
+        timestamp: h.timestamp || null
+      }))
+    };
+
+    const res = await fetch(`${API_BASE}/recommend`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    renderRecommendations(data);
+  } catch (err) {
+    panel.innerHTML = `
+      <div class="empty-state" style="color:var(--red)">
+        <div class="empty-icon">⚠️</div>
+        Could not reach the backend.<br>
+        <span style="color:var(--muted);font-size:12px;">Make sure your FastAPI server is running on ${API_BASE}</span>
+      </div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = "✨ Get AI Recommendations";
+}
+
+function renderRecommendations(data) {
+  const panel = document.getElementById("recommendPanel");
+  const recs = data.recommendations || [];
+  const profile = data.profile_summary || "";
+
+  // 1. Update the sidebar panel (reasons and profile summary)
+  let html = "";
+  if (profile) {
+    html += `
+      <div class="profile-summary">
+        <div class="profile-label">🔍 Agent 1 — User Profile</div>
+        ${profile}
+      </div>`;
+  }
+  if (!recs.length) {
+    html += `<div class="empty-state">No recommendations returned.</div>`;
+  } else {
+    html += `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">🎯 Agent 2 — Top Picks</div>`;
+    html += `<div class="rec-list">` + recs.map((rec, i) => {
+      const p = rec.product;
+      return `
+        <div class="rec-card" style="position:relative;" onclick="openProductModal(${p.id})">
+          <div class="rec-img"><img src="${p.image}" alt="${p.title}" onerror="this.style.display='none'"></div>
+          <div class="rec-info">
+            <div class="rec-title">${p.title}</div>
+            <div class="rec-price">$${p.price}</div>
+            <div class="rec-reason">💡 ${rec.reason}</div>
+          </div>
+          <div class="rec-number">${i+1}</div>
+        </div>`;
+    }).join("") + `</div>`;
+  }
+  panel.innerHTML = html;
+  showToast("🎯 AI recommendations ready!", "blue");
+
+  // 2. Update the main recommended products section (cumulative)
+  let hasNewProducts = false;
+  
+  recs.forEach(rec => {
+    // If this product has not been recommended before, add it
+    if (!cumulativeRecIds.has(rec.product.id)) {
+      cumulativeRecIds.add(rec.product.id);
+      cumulativeRecProducts.push(rec.product);
+      hasNewProducts = true;
+    }
+  });
+
+  // If there are any recommended products, show the section and build it
+  if (cumulativeRecProducts.length > 0) {
+    const recSection = document.getElementById("ai-recommended-section");
+    const recGrid = document.getElementById("ai-recommended-grid");
+    
+    recSection.style.display = "block";
+    document.getElementById("ai-recommended-count").textContent = `${cumulativeRecProducts.length} items`;
+
+    // Build cards with the same product style but a distinct highlighted border
+    recGrid.innerHTML = cumulativeRecProducts.map(p => `
+      <div class="product-card" style="border-color: rgba(0, 212, 255, 0.4); box-shadow: 0 4px 20px rgba(0,212,255,0.05);" onclick="openProductModal(${p.id})">
+        <div class="product-img-wrap">
+          <span class="product-category-tag" style="background: var(--accent); color: #000; font-weight: bold;">Recommended</span>
+          <img src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.style.display='none'">
+        </div>
+        <div class="product-body">
+          <div class="product-title">${p.title}</div>
+          <div class="product-meta">
+            <div class="product-price">$${p.price}</div>
+            <div class="product-rating">★ ${p.rating?.rate || '—'} <span style="color:var(--muted)">(${p.rating?.count || 0})</span></div>
+          </div>
+        </div>
+        <div class="product-actions">
+          <button class="btn btn-ghost btn-view" onclick="event.stopPropagation();openProductModal(${p.id})">View</button>
+          <button class="btn btn-primary btn-cart" onclick="event.stopPropagation();addToCart(${p.id})">Add 🛒</button>
+        </div>
+      </div>
+    `).join("");
+  }
+}
+
+// ==========================================
+// UTILS
+// ==========================================
+function showToast(msg, type = "blue") {
+  const wrap = document.getElementById("toastWrap");
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  wrap.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+function scrollToProducts() {
+  document.getElementById("products-section").scrollIntoView({ behavior: "smooth" });
+}
+
+// Close modals on overlay click
+document.getElementById("productModal").addEventListener("click", e => { if (e.target.id === "productModal") closeModal(); });
+document.getElementById("cartModal").addEventListener("click", e => { if (e.target.id === "cartModal") closeCartModal(); });
+</script>
+</body>
+</html>
