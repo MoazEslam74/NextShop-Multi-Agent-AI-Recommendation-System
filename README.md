@@ -10,25 +10,23 @@ NextShop is a proof-of-concept e-commerce platform that leverages a **Dual-Agent
 ---
 
 ## 🏗️ Architecture
+The system is divided into a Real-Time Recommendation Pipeline and an Offline Evaluation Pipeline.
 
-```
-User Browser (index.html)
-        │
-        │ HTTP (REST)
-        ▼
-FastAPI Backend (main.py)
-        │
-        ├─ GET /products         → Fake Store API
-        ├─ GET /categories       → Fake Store API
-        └─ POST /recommend
-                │
-                ├─ Agent 1: Profiler Chain (LLM only)
-                │     Input: user action history (JSON)
-                │     Output: 2-3 line profile summary
-                │
-                └─ Agent 2: Scout Agent (LLM + Tool)
-                      Tool: fetch_products_from_store → Fake Store API
-                      Output: Top 5 product IDs + reasons (JSON)
+```mermaid
+graph TD
+    U((User)) -->|Browsing / Add to Cart| UI[Frontend: HTML/JS]
+    UI -->|POST /recommend| API[FastAPI Backend]
+    
+    API -->|1. Passes History| A1[Agent 1: Profiler<br>Llama-3.3-70b]
+    A1 -.->|Applies Intent Weighting| A1
+    A1 -->|2. Returns Profile Summary| API
+    
+    API -->|3. Passes Profile| A2[Agent 2: Scout<br>Llama-3.3-70b]
+    A2 <-->|Searches Catalog| Store[(Fake Store API)]
+    A2 -->|4. Returns Top 3 & Reasons| API
+    
+    API -->|5. Display Recommendations| UI
+    API -->|6. Save Data| Log[(evaluation_logs.json)]
 ```
 
 ---
