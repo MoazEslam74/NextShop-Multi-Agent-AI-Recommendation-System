@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 # 1. Judge Model Setup (Avoiding Self-Bias)
 # ==========================================
 # Using a different architecture (Mixtral) instead of Llama to prevent self-enhancement bias.
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 os.environ["GROQ_API_KEY"] = GROQ_API_KEY
 
 # Temperature 0 for deterministic, strict evaluation

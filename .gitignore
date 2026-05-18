@@ -1,0 +1,15 @@
+# Executables
+cloudflared.exe
+
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs and Data
+evaluation_logs.json
+evaluation_results.csv
+my_bar_plot.png
+
+# Environment
+.env

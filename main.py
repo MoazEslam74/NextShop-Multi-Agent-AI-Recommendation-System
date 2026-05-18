@@ -27,7 +27,7 @@ app.add_middleware(
 # ==========================================
 # LLM Setup - Replace with your key
 # ==========================================
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "YOUR_GROQ_API_KEY_HERE")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 os.environ["GROQ_API_KEY"] = GROQ_API_KEY
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.5)
 
