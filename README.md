@@ -23,7 +23,7 @@ FastAPI Backend (main.py)
                 │
                 └─ Agent 2: Scout Agent (LLM + Tool)
                       Tool: fetch_products_from_store → Fake Store API
-                      Output: Top 3 product IDs + reasons (JSON)
+                      Output: Top 5 product IDs + reasons (JSON)
 ```
 
 ---
@@ -43,6 +43,7 @@ Edit `main.py` line 17:
 ```python
 GROQ_API_KEY = "YOUR_GROQ_API_KEY_HERE"
 ```
+and the same in `evaluate_system.py` line 12
 Or set as environment variable:
 ```bash
 export GROQ_API_KEY="gsk_your_key_here"
@@ -59,9 +60,11 @@ uvicorn main:app --reload --port 8000
 Backend will be live at: http://localhost:8000
 Interactive API docs: http://localhost:8000/docs
 
-### 4. Open the frontend
+### 4. Make your domain:
+upload `index.html` on  https://netlify.com and take your domain
 
-Just open `frontend/index.html` in your browser — no build step needed.
+### 5. Open the frontend
+Use the domain and enjoy!
 
 ---
 
