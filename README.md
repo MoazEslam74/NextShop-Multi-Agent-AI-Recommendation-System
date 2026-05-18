@@ -1,6 +1,11 @@
 # NexShop — Multi-Agent E-Commerce Recommendation System
+![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688)
+![LangChain](https://img.shields.io/badge/LangChain-Enabled-green)
+![Groq](https://img.shields.io/badge/Powered_by-Groq-orange)
+![Ngrok](https://img.shields.io/badge/Tunneling-Ngrok-1f1e33)
 
-A full-stack AI-powered recommendation engine using a dual-agent LangChain pipeline, FastAPI backend, and a modern HTML/JS frontend.
+NextShop is a proof-of-concept e-commerce platform that leverages a **Dual-Agent LLM Architecture** to provide hyper-personalized, real-time product recommendations based on user browsing behavior and intent analysis.NexShop is a proof-of-concept e-commerce platform that leverages a **Dual-Agent LLM Architecture** to provide hyper-personalized, real-time product recommendations based on user browsing behavior and intent analysis..
 
 ---
 
@@ -119,7 +124,7 @@ Use the domain and enjoy!
 **Agent 2 — Scout (LangChain Agent + Tool)**
 - Input: Profile summary from Agent 1
 - Uses: `fetch_products_from_store` tool → calls Fake Store API
-- Selects top 3 product IDs + reasons
+- Selects top 5 product IDs + reasons
 - Returns structured JSON for enrichment
 
 ---
